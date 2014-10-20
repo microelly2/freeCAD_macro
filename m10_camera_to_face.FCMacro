@@ -1,0 +1,25 @@
+# -*- coding: utf-8 -*-
+# Set the current view perpendicular to the selected face
+# Place la vue perpendiculairement à la face selectionnee
+# 2013 Jonathan Wiedemann
+ 
+from pivy import coin
+s=Gui.Selection.getSelectionEx()
+obj=s[0]
+faceSel = obj.SubObjects[0]
+dir = faceSel.normalAt(0,0)
+cam = FreeCADGui.ActiveDocument.ActiveView.getCameraNode()
+camValues = cam.position.getValue()
+pos = FreeCAD.Vector( (camValues[0], camValues[1], camValues[2],) )
+p = pos.add(dir.negative())
+print(p.x,p.y,p.z)
+if dir.z == 1 :
+   cam.pointAt( coin.SbVec3f(p.x,p.y,p.z), coin.SbVec3f(0.0,1.0,0.0))
+   print("normal = 1")
+elif dir.z == -1 :
+   cam.pointAt( coin.SbVec3f(p.x,p.y,p.z), coin.SbVec3f(0.0,1.0,0.0))
+   print("normal = -1")
+else :
+   cam.pointAt( coin.SbVec3f(p.x,p.y,p.z), coin.SbVec3f(0.0,0.0,1.0))
+   print("normal normale")
+# Gui.SendMsgToActiveView("ViewSelection")

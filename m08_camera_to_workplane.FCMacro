@@ -1,0 +1,10 @@
+# -*- coding: utf-8 -*-
+# (c) microelly2@freecadbuch.de 2014
+#
+# Set the current view perpendicular to the working plane
+# 
+#
+draftPlane = FreeCAD.DraftWorkingPlane
+a=draftPlane.axis
+r=FreeCAD.Rotation(App.Vector(0,0,1),a)
+FreeCADGui.ActiveDocument.ActiveView.setCameraOrientation(r.Q)

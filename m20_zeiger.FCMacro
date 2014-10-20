@@ -1,0 +1,63 @@
+# -*- coding: utf-8 -*-
+# (c) microelly2@freecadbuch.de 2014
+#
+# paint an arrow on the start of a line and a bubble with a label on the back end
+#
+
+import Draft
+
+scale=0.2
+letter="B"
+
+MouseSel = Gui.Selection.getSelectionEx()
+
+if len(MouseSel)<>1:
+	App.Console.PrintError("Works only on a line or 2 points of a line\n")
+	raise Exception("Wrong Selection")
+else:
+	if len(MouseSel[0].SubObjects) == 2:
+	# zwei punkte
+		sel_obj=MouseSel[0]
+		pa=sel_obj.SubObjects[0]
+		pb=sel_obj.SubObjects[1]
+		
+	else :
+	#eine kante
+		sel_obj=MouseSel[0]
+		sel_obj=sel_obj.SubObjects[0]
+		pa=sel_obj.Vertexes[0]
+		pb=sel_obj.Vertexes[1]
+
+p1=FreeCAD.Vector(pa.X,pa.Y,pa.Z)
+print p1
+p2=FreeCAD.Vector(pb.X,pb.Y,pb.Z)
+print p2
+
+points=[p1,p2]
+
+Draft.makeWire(points,closed=False,face=False,support=None)
+t=FreeCAD.Vector(p1)
+t=t.sub(p2)
+t=t.normalize()
+
+b=FreeCAD.Vector(-scale*t[1],scale*t[0],0)
+
+q=FreeCAD.Vector(p1).add(t)
+
+q1=FreeCAD.Vector(p1)
+q1=q1.add(b)
+
+q2=FreeCAD.Vector(p1)
+q2=q2.sub(b)
+
+
+points=[q,q1,q2]
+w=Draft.makeWire(points,closed=True,face=True,support=None)
+FreeCADGui.ActiveDocument.getObject(w.Label).ShapeColor=(0.0,0.0,0.0)
+
+pl=FreeCAD.Placement()
+pl.Base=FreeCAD.Vector(p2).sub(t)
+Draft.makeCircle(radius=1,placement=pl,face=False,support=None)
+Draft.makeText([letter],point=FreeCAD.Vector(p2).sub(t).sub(FreeCAD.Vector(0.5,0.5,0)))
+
+

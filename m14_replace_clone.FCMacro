@@ -1,0 +1,14 @@
+# -*- coding: utf-8 -*-
+# (c) microelly2@freecadbuch.de 2014
+#
+# v 0.1
+# select a clone and a part
+# the object of the clone is substituded by the part
+
+import Draft
+
+t=FreeCADGui.Selection.getSelection()
+cl=App.ActiveDocument.getObject(t[0].Name)
+ob=App.ActiveDocument.getObject(t[1].Name)
+cl.Objects=ob
+App.ActiveDocument.recompute()

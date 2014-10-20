@@ -1,0 +1,56 @@
+# -*- coding: utf-8 -*-
+# (c) microelly2@freecadbuch.de 2014
+#
+# Set the current view perpendicular to an edge or to a line defined by 2 points
+# 
+
+def _alignCamera(sub0,sub1,reverse=False):
+	if reverse:
+		v=sub0.sub(sub1)
+	else:
+		v=sub1.sub(sub0)
+	print(v)
+	r=App.Rotation(App.Vector(0,0,1),v)
+	print(r)
+	FreeCADGui.ActiveDocument.ActiveView.setCameraOrientation(r.Q)
+
+def alignCamera2():
+    MouseSel = Gui.Selection.getSelectionEx()
+    Selected_Points = []
+    Selected_Edges = []
+    Selected_Planes = []
+
+    for i in range(len(MouseSel)):
+      Sel_i_Object = MouseSel[i]
+      SubObjects_Inside = Sel_i_Object.SubObjects
+      for n in range(len(SubObjects_Inside)):
+        SubObject = SubObjects_Inside[n]
+        if SubObject.ShapeType == "Vertex":
+          Selected_Points.append(SubObject)
+        
+        if SubObject.ShapeType == "Edge":
+          Selected_Edges.append(SubObject) 
+        
+        if SubObject.ShapeType == "Face":
+          Selected_Planes.append(SubObject)
+          
+    
+    Number_of_Points = len(Selected_Points)
+    Number_of_Edges = len(Selected_Edges)
+    Number_of_Planes = len(Selected_Planes)
+
+    if Number_of_Edges ==1:
+		edge=Selected_Edges[0]
+		Selected_Points=edge.Vertexes
+    		FreeCAD.t=edge.Vertexes
+		_alignCamera(Selected_Points[0].Point,Selected_Points[1].Point,False)
+    elif Number_of_Points == 2:
+      print "Selected Points", Selected_Points
+      _alignCamera(Selected_Points[0].Point,Selected_Points[1].Point,False)
+
+    return True
+
+
+alignCamera2()
+
+

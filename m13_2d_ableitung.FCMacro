@@ -1,0 +1,64 @@
+# -*- coding: utf-8 -*-
+# (c) microelly2@freecadbuch.de 2014
+#
+
+import Draft
+
+# abstand ziwschen den Ansichten
+d=20
+
+
+from PySide import QtGui,QtCore
+def errorDialog(msg):
+    diag = QtGui.QMessageBox(QtGui.QMessageBox.Critical,u"Fehler",msg )
+    diag.exec_()
+
+try:
+	# erstes gewaehlte objekt
+	t=FreeCADGui.Selection.getSelectionEx()
+	baseobj=t[0].Object
+except:
+	errorDialog("Kein Objekt zum Projezieren auswaehlen")
+	raise Exception("kein Objekt zum Ableiten ausgewaehlt")
+
+box=baseobj.Shape.BoundBox
+# FreeCAD.Console.PrintMessage(box)
+
+bes=box.YMin
+bee=box.YMax
+
+las=box.XMin
+lae=box.XMax
+
+hos=box.ZMin
+hoe=box.ZMax
+
+be=bee-bes
+la=lae-las
+ho=hoe-hos
+
+# draufsicht
+obj= Draft.makeShape2DView(baseobj,App.Vector(0,0,1))
+obj.Placement = App.Placement(App.Vector(0-las,0-bes,0),App.Rotation(App.Vector(0,0,1),0))
+# obj.Projection = (0.00, 0.00, 1.00)
+
+# rechts
+obj= Draft.makeShape2DView(baseobj,App.Vector(1,0,0))
+obj.Placement = App.Placement(App.Vector(0-be-bes-d,be-hos+d,0),App.Rotation(App.Vector(0,0,1),90))
+
+# vorn
+obj= Draft.makeShape2DView(baseobj,App.Vector(0,-1,0))
+obj.Placement = App.Placement(App.Vector(0-las,be-hos+d,0),App.Rotation(App.Vector(0,0,1),-90))
+
+# links
+obj= Draft.makeShape2DView(baseobj,App.Vector(-1,0,0))
+obj.Placement = App.Placement(App.Vector(be+la+bes+d,be-hos+d,0),App.Rotation(App.Vector(0,0,1),-90))
+
+
+# hinten
+obj= Draft.makeShape2DView(baseobj,App.Vector(0,1,0))
+obj.Placement = App.Placement(App.Vector(0-las,0+hos-d,0),App.Rotation(App.Vector(0,0,1),-90))
+
+# unten
+obj= Draft.makeShape2DView(baseobj,App.Vector(0,0,-1))
+obj.Placement = App.Placement(App.Vector(-las,be+ho+be+bes+d+d,0),App.Rotation(App.Vector(0,0,1),180))

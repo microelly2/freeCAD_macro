@@ -1,0 +1,10 @@
+# -*- coding: utf-8 -*-
+# (c) microelly2@freecadbuch.de 2014
+#
+
+import Draft
+t=FreeCADGui.Selection.getSelection()
+cl=App.ActiveDocument.getObject(t[0].Name)
+cl.Projection = (0.79, -0.21, 0.58)
+cl.Placement = App.Placement(App.Vector(0,0,0),App.Rotation(App.Vector(0,0,1),98.80))
+App.ActiveDocument.recompute()

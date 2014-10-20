@@ -1,0 +1,20 @@
+# -*- coding: utf-8 -*-
+# (c) microelly2@freecadbuch.de 2014
+#
+
+
+# klick mit maus punkt an objekt1
+# dann ctrl-klick punkt auf objekt2 
+# verschiebt objekt1 um vektor zwischen den beiden punkten
+
+from FreeCAD import Gui
+
+MouseSel = Gui.Selection.getSelectionEx()
+ObjA_Name = MouseSel[0].ObjectName
+PointA = MouseSel[0].SubObjects[0].Point
+PointB = MouseSel[1].SubObjects[0].Point
+Vector = PointB - PointA
+Pos0 = App.ActiveDocument.getObject(ObjA_Name).Placement.Base
+Rot0 = App.ActiveDocument.getObject(ObjA_Name).Placement.Rotation
+MVector = Pos0 + Vector
+App.ActiveDocument.getObject(ObjA_Name).Placement = App.Placement(MVector, Rot0)

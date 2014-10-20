@@ -1,0 +1,103 @@
+# -*- coding: utf-8 -*-
+# (c) microelly2@freecadbuch.de 2014
+
+from numpy import *
+from math import sqrt
+
+TEST=0
+DEBUG=1
+def Dprint(arg):
+	if DEBUG:
+		FreeCAD.Console.PrintMessage(str(arg)+ "\n")
+	
+Dprint("\n\n\n-----------------------------\n\n")
+
+def ff(p1,p2,p3):
+
+	base=FreeCAD.Vector(p1)
+	a=p2.sub(p1)
+	Dprint(a)
+	la=FreeCAD.Vector(a).Length
+	
+	Dprint("la " + str(la) )
+	b=p3.sub(p1)
+	lb=FreeCAD.Vector(b).Length
+	a.normalize()
+	Dprint ("a " + str(a))
+
+	b.normalize()
+	Dprint ("b " + str(b))
+
+	wb=arccos(a.dot(b))
+
+	c=b.cross(a).normalize()
+
+	Dprint ("c " + str(c))
+
+	gier1=arctan2(a.y,a.x)
+	gier=gier1*180/3.14
+	Dprint("gier:");Dprint(gier)
+
+	r=sqrt(a.x*a.x + a.y*a.y)
+	steig1=arctan2(a.z,r)
+	steig=-steig1*180/3.14
+	Dprint("steig");Dprint(steig)
+
+	gier1=-gier1
+	b2=FreeCAD.Vector(b.x*cos(gier1)-b.y*sin(gier1), b.x*sin(gier1)+b.y*cos(gier1),b.z)
+	Dprint("b2");	Dprint(b2)
+
+	steig1=-steig1
+	b3=FreeCAD.Vector(b2.x*cos(steig1)-b2.z*sin(steig1), b2.y,b2.x*sin(steig1)+b2.z*cos(steig1))
+	Dprint("b3");	Dprint(b3)
+
+	roll1=arctan2(b3.z,b3.y)
+	roll=-roll1*180/3.14
+	Dprint("roll"); 	Dprint(roll)
+
+#	vz=FreeCAD.Vector(0,0,1)
+#	rot=App.Rotation(vz,c)
+#	Dprint(rot)
+
+	rot=FreeCAD.Rotation(gier,steig,-roll)
+
+	Dprint("wb") ;Dprint(wb)
+	sk=App.activeDocument().addObject('Sketcher::SketchObject','PlaneSketch')
+	sk.addGeometry(Part.Line(App.Vector(0.000000,0.000000,0),App.Vector(la,0.000000,0)))
+#	sk.addGeometry(Part.Line(App.Vector(0.000000,lb,0),App.Vector(0.000000,0.000000,0)))
+
+	sk.addGeometry(Part.Line(App.Vector(lb*cos(wb),lb*sin(wb),0),App.Vector(0.000000,0.000000,0)))
+	sk.Placement=FreeCAD.Placement(base,rot)
+	App.ActiveDocument.recompute()
+
+def main():
+   MouseSel = Gui.Selection.getSelectionEx()
+   Selected_Points = []
+   Selected_Edges = []
+   Selected_Planes = []
+   for i in range(len(MouseSel)):
+      Sel_i_Object = MouseSel[i]
+      SubObjects_Inside = Sel_i_Object.SubObjects
+      for n in range(len(SubObjects_Inside)):
+        SubObject = SubObjects_Inside[n]
+        if SubObject.ShapeType == "Vertex":
+          Selected_Points.append(SubObject)
+   Number_of_Points = len(Selected_Points)
+   print Number_of_Points
+   if Number_of_Points == 3:
+      print "Selected Points", Selected_Points
+      ff(Selected_Points[0].Point,Selected_Points[1].Point,Selected_Points[2].Point)
+   else:
+      Dprint ("Geht nicht")
+
+TEST=0
+if TEST:
+	v1=FreeCAD.Vector (20, 10, 10.0)
+	v2=FreeCAD.Vector (30, 10 ,10 )
+	v3=FreeCAD.Vector (25,15, 10)
+	ps=[v1,v2,v1,v3,v2,v3]
+	p=Part.makePolygon(ps)
+	Part.show(p)
+	ff(v1,v2,v3)
+else:
+	main()  

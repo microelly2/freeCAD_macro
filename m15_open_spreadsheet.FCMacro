@@ -1,0 +1,7 @@
+# -*- coding: utf-8 -*-
+# (c) microelly2@freecadbuch.de 2014
+#
+# open the selected spreeadsheet
+
+t=FreeCADGui.Selection.getSelection()
+FreeCADGui.ActiveDocument.setEdit(t[0].Name,0)
