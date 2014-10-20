@@ -4,17 +4,35 @@
 # paint an arrow on the start of a line and a bubble with a label on the back end
 #
 
-import Draft
 
-scale=0.2
+import Draft,PyQt4
+from PyQt4 import QtGui,QtCore
+
+scale=0.3
+fontSize=4.2
+
 letter="B"
+
+needLine=1
+
+def errorDialog(msg):
+    diag = QtGui.QMessageBox(QtGui.QMessageBox.Critical,u"Error Message",msg )
+    diag.setWindowFlags(PyQt4.QtCore.Qt.WindowStaysOnTopHint)
+    diag.exec_()
 
 MouseSel = Gui.Selection.getSelectionEx()
 
-if len(MouseSel)<>1:
-	App.Console.PrintError("Works only on a line or 2 points of a line\n")
-	raise Exception("Wrong Selection")
-else:
+
+if len(MouseSel)==2:
+	a=MouseSel[0]
+	pa=a.SubObjects[0]
+	a=MouseSel[1]
+	pb=a.SubObjects[0]
+	if pa.ShapeType != 'Vertex'  or  pb.ShapeType != 'Vertex':
+		App.Console.PrintError("Works only on a line or 2 points of a line\n")	
+		errorDialog("Works only on a line or 2 points of a line")
+		raise Exception("Wrong Selection")
+elif  len(MouseSel)==1: 
 	if len(MouseSel[0].SubObjects) == 2:
 	# zwei punkte
 		sel_obj=MouseSel[0]
@@ -23,10 +41,22 @@ else:
 		
 	else :
 	#eine kante
-		sel_obj=MouseSel[0]
-		sel_obj=sel_obj.SubObjects[0]
-		pa=sel_obj.Vertexes[0]
-		pb=sel_obj.Vertexes[1]
+		try:
+			needLine=0
+			sel_obj=MouseSel[0]
+			sel_obj=sel_obj.SubObjects[0]
+			pa=sel_obj.Vertexes[0]
+			pb=sel_obj.Vertexes[1]
+		except:
+			errorDialog("Works only on a line or 2 points of a line")
+			raise Exception("Wrong Selection")
+
+else:
+	App.Console.PrintError("Works only on a line or 2 points of a line\n")
+	errorDialog("Works only on a line or 2 points of a line")
+	raise Exception("Wrong Selection")
+
+
 
 p1=FreeCAD.Vector(pa.X,pa.Y,pa.Z)
 print p1
@@ -35,29 +65,40 @@ print p2
 
 points=[p1,p2]
 
-Draft.makeWire(points,closed=False,face=False,support=None)
+if needLine:
+	Draft.makeWire(points,closed=False,face=False,support=None)
+
 t=FreeCAD.Vector(p1)
 t=t.sub(p2)
 t=t.normalize()
 
 b=FreeCAD.Vector(-scale*t[1],scale*t[0],0)
 
-q=FreeCAD.Vector(p1).add(t)
+q=FreeCAD.Vector(p1)
 
 q1=FreeCAD.Vector(p1)
-q1=q1.add(b)
+q1=q1.add(b).sub(t)
 
 q2=FreeCAD.Vector(p1)
-q2=q2.sub(b)
-
+q2=q2.sub(b).sub(t)
 
 points=[q,q1,q2]
 w=Draft.makeWire(points,closed=True,face=True,support=None)
 FreeCADGui.ActiveDocument.getObject(w.Label).ShapeColor=(0.0,0.0,0.0)
 
+t.multiply(fontSize)
+
 pl=FreeCAD.Placement()
 pl.Base=FreeCAD.Vector(p2).sub(t)
-Draft.makeCircle(radius=1,placement=pl,face=False,support=None)
-Draft.makeText([letter],point=FreeCAD.Vector(p2).sub(t).sub(FreeCAD.Vector(0.5,0.5,0)))
+Draft.makeCircle(radius=fontSize,placement=pl,face=False,support=None)
+# le=Draft.makeText([letter],point=FreeCAD.Vector(p2).sub(t).sub(FreeCAD.Vector(0.5,-0.5*fontSize,0)))
+
+
+le=Draft.makeText([letter],point=FreeCAD.Vector(p2).sub(t).add(FreeCAD.Vector(0,-0.5*fontSize,0)))
+
+leo=FreeCADGui.ActiveDocument.getObject(le.Label)
+leo.FontSize=fontSize
+leo.Justification = "Center"
+
 
 
