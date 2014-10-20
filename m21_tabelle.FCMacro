@@ -1,0 +1,45 @@
+# (c) microelly2@freecadbuch.de, 2014 
+# adds a table to the draft workspace
+
+
+import Draft
+pl = FreeCAD.Placement()
+pl.Base = FreeCAD.Vector(0.0,0.0,0.0)
+w1=Draft.makeRectangle(length=10.0,height=-10.0,placement=pl,face=False,support=None)
+pl.Base = FreeCAD.Vector(10.0,0.0,0.0)
+w2=Draft.makeRectangle(length=10.0,height=-10.0,placement=pl,face=False,support=None)
+pl.Base = FreeCAD.Vector(20.0,0.0,0.0)
+w3=Draft.makeRectangle(length=100.0,height=-10.0,placement=pl,face=False,support=None)
+pl.Base = FreeCAD.Vector(120.0,0.0,0.0)
+w4=Draft.makeRectangle(length=50.0,height=-10.0,placement=pl,face=False,support=None)
+fuse=App.activeDocument().addObject("Part::MultiFuse","Fusion")
+fuse.Shapes = [w1,w2,w3,w4]
+ar=Draft.makeArray(fuse,FreeCAD.Vector(10,0,0),FreeCAD.Vector(0,-10,0),1,6)
+
+t1=Draft.makeText(["Nr."],point=FreeCAD.Vector(5.0,-7.0,0.0))
+t1g=FreeCADGui.ActiveDocument.getObject(t1.Label)
+t1g.FontSize = 5.20
+t1g.Justification = "Center"
+
+t2=Draft.makeText(["#"],point=FreeCAD.Vector(15.0,-7.0,0.0))
+t2g=FreeCADGui.ActiveDocument.getObject(t2.Label)
+t2g.FontSize = 5.20
+t2g.Justification = "Center"
+
+t3=Draft.makeText(["Description"],point=FreeCAD.Vector(70.0,-7.0,0.0))
+t3g=FreeCADGui.ActiveDocument.getObject(t3.Label)
+
+t3g.FontSize = 5.20
+t3g.Justification = "Center"
+
+t4=Draft.makeText(["Remark"],point=FreeCAD.Vector(150.0,-7.0,0.0))
+t4g=FreeCADGui.ActiveDocument.getObject(t4.Label)
+t4g.FontSize = 5.20
+t4g.Justification = "Center"
+
+
+gr=App.ActiveDocument.addObject("App::DocumentObjectGroup","Tabelle")
+for t in [t1,t2,t3,t4,ar]:
+	gr.addObject(t)
+
+App.ActiveDocument.recompute()
