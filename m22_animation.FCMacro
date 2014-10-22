@@ -5,6 +5,10 @@ import Draft
 import time
 import datetime
 
+ll=20
+
+
+
 def say(wort):
    App.Console.PrintMessage(str(wort) + "\n")
 
@@ -37,7 +41,21 @@ class  Mover(Actor):
 
 	def __init__(self,obj,motion=FreeCAD.Vector(100,0,0) ,start=10,end=20):
  		super(type(self), self).__init__(obj,start,end)
-		self.motionVector=motion
+		v=motion
+		if   isinstance(motion,str):
+			k=motion[0:1]
+			say(k)
+			if k=='-':
+				motion=motion[1:]
+				tobj=FreeCAD.ActiveDocument.getObject(motion)
+				end=FreeCAD.Vector(tobj.Start)
+				start=FreeCAD.Vector(tobj.End)
+			else:
+				tobj=FreeCAD.ActiveDocument.getObject(motion)
+				start=FreeCAD.Vector(tobj.Start)
+				end=FreeCAD.Vector(tobj.End)
+			v=end.sub(start)
+		self.motionVector=v
 
 
 	def step(self,now):
@@ -75,14 +93,15 @@ class Manager(object):
 
 	def register(self,obj):
 		self.targets.append(obj)
-		say(self.targets)
+
 	
 	def run(self,intervall):
 		for nw in range(intervall):	
 			say(nw)
 			for obj in self.targets:
 				obj.step(nw)
-			Draft.move(helper,sk,copy=False)
+			#Draft.move(helper,sk,copy=False)
+			FreeCADGui.Selection.clearSelection()
 			FreeCADGui.updateGui() 
 			self.genOutput(nw)
 			self.showTime(nw)
@@ -102,21 +121,23 @@ class Manager(object):
 	def setShowTime(self,texter):
 		self.text=texter
 
+
 	def showTime(self,nw1):
 		if self.text:
 			kf= "%04.f"%nw1
 			self.text.LabelText = [unicode(str(kf), 'utf-8'),]
 
-	def finalize(self):
+	def finalize(self,wait=5):
 			for obj in self.targets:
 				obj.toInitialPlacement()
 				FreeCADGui.updateGui() 
-			time.sleep(5)
+			time.sleep(wait)
 	
  
 
 
 # vectors for the moves
+
 sk=FreeCAD.Vector(100,0,0)
 sk2=FreeCAD.Vector(0,40,0)
 
@@ -129,8 +150,7 @@ def init1():
 	import Draft
 	App.newDocument("Unnamed")
 	App.setActiveDocument("Unnamed")
-	App.ActiveDocument=App.getDocument("Unnamed")
-	Gui.ActiveDocument=Gui.getDocument("Unnamed")
+
  
 	pl = FreeCAD.Placement()
 	pl.Rotation.Q = (0.0,-0.0,-0.0,1.0)
@@ -150,8 +170,6 @@ def init1():
 	pl.Base = FreeCAD.Vector(-15.3152351379,75.8536605835,0.0)
 	Draft.makeRectangle(length=126.597446442,height=-87.5533657074,placement=pl,face=False,support=None)
 	Gui.SendMsgToActiveView("ViewFit")
-	Draft.makeText(["textanzeige"],point=FreeCAD.Vector(4.43928909302,60.9376678467,0.0))
-	FreeCADGui.getDocument("Unnamed").getObject("Text").FontSize = 10
 def finish1():
 	try:
 		App.ActiveDocument=App.getDocument("Unnamed")
@@ -165,6 +183,9 @@ def finish1():
 
 def test1():
 
+	text=Draft.makeText(["textanzeige"],point=FreeCAD.Vector(4,60,0.0))
+	FreeCADGui.getDocument("Unnamed").getObject("Text").FontSize = 10
+
 
 	# the entertainer
 	m=Manager()
@@ -172,11 +193,11 @@ def test1():
 
 	# place to write the film output
 	fn='/home/microelly2/pic2/AA_B'
- #	m.setOutput(fn)
+ 	m.setOutput(fn)
 
 	# actor 1 an rectangle, that should move - move the table
 	r1=Mover("Rectangle",sk2,5,45)
-	r1.initPlacement(rp)
+# 	r1.initPlacement(rp)
 	m.register(r1)
 
 	# second  movement of the same rectangle
@@ -189,17 +210,43 @@ def test1():
 	m.register(r3)
 	
 	# run the animation for 100 frames
-	m.run(100)
-	m.finalize()
+##	m.run(100)
+	m.run(ll)
 
+	# bring all back to the initial position
+	m.finalize(0)
+
+
+def test2():
+	# move along a line "Line"
+	text=Draft.makeText(["textanzeige"],point=FreeCAD.Vector(4,60,0.0))
+	FreeCADGui.getDocument("Unnamed").getObject("Text").FontSize = 10
+
+	m=Manager()
+	m.setShowTime(text)
+	r1=Mover("Rectangle","Line",0,10)
+ 	r1.initPlacement(rp)
+	m.register(r1)
+	m.run(10)
+
+	App.getDocument("Unnamed").removeObject("Text")
+
+def test3():
+	# move the line backward  "-Line"
+	m=Manager()
+	r1=Mover("Rectangle","-Line",0,30)
+	m.register(r1)
+	m.run(30)
 
 # main
-init1()
 
-#rectangle=FreeCAD.ActiveDocument.Rectangle
-#triangle=FreeCAD.ActiveDocument.DWire
-helper=FreeCAD.ActiveDocument.DWire001
-text=FreeCAD.ActiveDocument.Text
+if 0:
+	init1()
+	test1()
+	finish1()
 
-test1()
-finish1()
+if 1:
+	test2()
+if 1:
+	test3()
+
