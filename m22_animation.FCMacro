@@ -12,17 +12,33 @@ def say(wort):
 
 class Actor(object):
 
+	def __init__(self,obj,start=10,end=20):
+		self.obj=self.getObject(obj)
+		self.start=start
+		self.end=end
+		self.initPlace=	self.obj.Placement
+
+
 	def initPlacement(self,tp):
 		self.initPlace=tp
 		self.obj.Placement=tp
+	def getObject(self,name):
+		if  isinstance(name,str):
+			obj=FreeCAD.ActiveDocument.getObject(name)
+		else:
+			obj=name
+		return obj
+
+	def toInitialPlacement(self):
+		self.obj.Placement=self.initPlace
+	
 
 class  Mover(Actor):
 
 	def __init__(self,obj,motion=FreeCAD.Vector(100,0,0) ,start=10,end=20):
-		self.obj=obj
+ 		super(type(self), self).__init__(obj,start,end)
 		self.motionVector=motion
-		self.start=start
-		self.end=end
+
 
 	def step(self,now):
 		if now<self.start or now>self.end:
@@ -35,12 +51,10 @@ class  Mover(Actor):
 class  Rotator(Actor):
 
 	def __init__(self,obj,position=FreeCAD.Vector(0,0,0),axis=FreeCAD.Vector(0,0,1),angle=290,start=10,end=90):
-		self.obj=obj
+ 		super(type(self), self).__init__(obj,start,end)
 		self.positionVector=position
 		self.axisVector=axis
 		self.angle=angle
-		self.start=start
-		self.end=end
 
 	def step(self,now):
 		if now<self.start or now>self.end:
@@ -92,6 +106,13 @@ class Manager(object):
 		if self.text:
 			kf= "%04.f"%nw1
 			self.text.LabelText = [unicode(str(kf), 'utf-8'),]
+
+	def finalize(self):
+			for obj in self.targets:
+				obj.toInitialPlacement()
+				FreeCADGui.updateGui() 
+			time.sleep(5)
+	
  
 
 
@@ -151,31 +172,32 @@ def test1():
 
 	# place to write the film output
 	fn='/home/microelly2/pic2/AA_B'
- 	m.setOutput(fn)
+ #	m.setOutput(fn)
 
 	# actor 1 an rectangle, that should move - move the table
-	r1=Mover(rectangle,sk2,5,45)
+	r1=Mover("Rectangle",sk2,5,45)
 	r1.initPlacement(rp)
 	m.register(r1)
 
 	# second  movement of the same rectangle
-	r2=Mover(rectangle,sk,25,80)
+	r2=Mover("Rectangle",sk,25,80)
 	m.register(r2)
 
-    # actor 2  a rotating triangle  - drill the screw
-	r3=Rotator(triangle)
+    # actor 2  a triangle, that rotates    - drill the screw
+	r3=Rotator("DWire")
 	r3.initPlacement(tp)
 	m.register(r3)
 	
 	# run the animation for 100 frames
 	m.run(100)
+	m.finalize()
 
 
 # main
 init1()
 
-rectangle=FreeCAD.ActiveDocument.Rectangle
-triangle=FreeCAD.ActiveDocument.DWire
+#rectangle=FreeCAD.ActiveDocument.Rectangle
+#triangle=FreeCAD.ActiveDocument.DWire
 helper=FreeCAD.ActiveDocument.DWire001
 text=FreeCAD.ActiveDocument.Text
 
