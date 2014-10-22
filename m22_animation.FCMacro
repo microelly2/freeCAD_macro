@@ -145,22 +145,29 @@ def finish1():
 def test1():
 
 
+	# the entertainer
 	m=Manager()
 	m.setShowTime(text)
+
+	# place to write the film output
 	fn='/home/microelly2/pic2/AA_B'
  	m.setOutput(fn)
 
+	# actor 1 an rectangle, that should move - move the table
 	r1=Mover(rectangle,sk2,5,45)
 	r1.initPlacement(rp)
 	m.register(r1)
 
+	# second  movement of the same rectangle
 	r2=Mover(rectangle,sk,25,80)
 	m.register(r2)
 
+    # actor 2  a rotating triangle  - drill the screw
 	r3=Rotator(triangle)
 	r3.initPlacement(tp)
 	m.register(r3)
 	
+	# run the animation for 100 frames
 	m.run(100)
 
 
