@@ -1,0 +1,176 @@
+
+
+import FreeCADGui
+import Draft
+import time
+import datetime
+
+def say(wort):
+   App.Console.PrintMessage(str(wort) + "\n")
+
+# version 0.2
+
+class Actor(object):
+
+	def initPlacement(self,tp):
+		self.initPlace=tp
+		self.obj.Placement=tp
+
+class  Mover(Actor):
+
+	def __init__(self,obj,motion=FreeCAD.Vector(100,0,0) ,start=10,end=20):
+		self.obj=obj
+		self.motionVector=motion
+		self.start=start
+		self.end=end
+
+	def step(self,now):
+		if now<self.start or now>self.end:
+			pass
+		else:
+			relativ=1.00/(self.end-self.start)
+			v=FreeCAD.Vector(self.motionVector).multiply(relativ)
+			Draft.move(self.obj,v,copy=False)
+
+class  Rotator(Actor):
+
+	def __init__(self,obj,position=FreeCAD.Vector(0,0,0),axis=FreeCAD.Vector(0,0,1),angle=290,start=10,end=90):
+		self.obj=obj
+		self.positionVector=position
+		self.axisVector=axis
+		self.angle=angle
+		self.start=start
+		self.end=end
+
+	def step(self,now):
+		if now<self.start or now>self.end:
+			pass
+		else:
+			relativ=1.00/(self.end-self.start)
+			angle2=self.angle*relativ
+			say(angle2)
+			say(self.axisVector)
+			Draft.rotate([self.obj],angle2,self.positionVector,axis=self.axisVector,copy=False)
+	
+class Manager(object):
+	def __init__(self):
+		self.targets=[]
+		self.fn=''
+		self.text=0
+		pass
+
+	def register(self,obj):
+		self.targets.append(obj)
+		say(self.targets)
+	
+	def run(self,intervall):
+		for nw in range(intervall):	
+			say(nw)
+			for obj in self.targets:
+				obj.step(nw)
+			Draft.move(helper,sk,copy=False)
+			FreeCADGui.updateGui() 
+			self.genOutput(nw)
+			self.showTime(nw)
+			time.sleep(0.02)
+
+	def setOutput(self,path,size_x=640,size_y=480):
+		self.fn=path
+		self.size_x=size_x
+		self.size_y=size_y
+
+	def genOutput(self,nw1):
+		if self.fn<>'':
+			kf= "%04.f"%nw1
+			fn=self.fn+kf+'.png'
+			Gui.activeDocument().activeView().saveImage(fn,self.size_x,self.size_y,'Current')
+
+	def setShowTime(self,texter):
+		self.text=texter
+
+	def showTime(self,nw1):
+		if self.text:
+			kf= "%04.f"%nw1
+			self.text.LabelText = [unicode(str(kf), 'utf-8'),]
+ 
+
+
+# vectors for the moves
+sk=FreeCAD.Vector(100,0,0)
+sk2=FreeCAD.Vector(0,40,0)
+
+
+# initial placement
+rp = App.Placement(App.Vector(1,1,0),App.Rotation(App.Vector(0,0,1),0))
+tp = App.Placement(App.Vector(1,1,0),App.Rotation(App.Vector(0,0,1),0))
+
+def init1():
+	import Draft
+	App.newDocument("Unnamed")
+	App.setActiveDocument("Unnamed")
+	App.ActiveDocument=App.getDocument("Unnamed")
+	Gui.ActiveDocument=Gui.getDocument("Unnamed")
+ 
+	pl = FreeCAD.Placement()
+	pl.Rotation.Q = (0.0,-0.0,-0.0,1.0)
+	pl.Base = FreeCAD.Vector(-1.32548344135,0.938884139061,0.0)
+	Draft.makeRectangle(length=2.2229462862,height=-1.14599096775,placement=pl,face=False,support=None)
+	points=[FreeCAD.Vector(-0.566091835499,0.455634981394,0.0),FreeCAD.Vector(1.44974756241,-1.64304709435,0.0),FreeCAD.Vector(-2.43005299568,-1.6982755661,0.0)]
+	Draft.makeWire(points,closed=True,face=False,support=None)
+	FreeCAD.getDocument("Unnamed").getObject("DWire").MakeFace = True
+	FreeCADGui.getDocument("Unnamed").getObject("DWire").ShapeColor = (0.00,1.00,0.00)
+	FreeCADGui.getDocument("Unnamed").getObject("Rectangle").ShapeColor = (1.00,0.00,0.00)
+	FreeCAD.getDocument("Unnamed").getObject("Rectangle").MakeFace = True
+	points=[FreeCAD.Vector(-0.566091835499,0.455634981394,0.0),FreeCAD.Vector(1.44974756241,-1.64304709435,0.0),FreeCAD.Vector(-2.43005299568,-1.6982755661,0.0)]
+	Draft.makeWire(points,closed=True,face=False,support=None)
+	Gui.getDocument("Unnamed").getObject("DWire001").Visibility=False
+	pl = FreeCAD.Placement()
+	pl.Rotation.Q = (0.0,-0.0,-0.0,1.0)
+	pl.Base = FreeCAD.Vector(-15.3152351379,75.8536605835,0.0)
+	Draft.makeRectangle(length=126.597446442,height=-87.5533657074,placement=pl,face=False,support=None)
+	Gui.SendMsgToActiveView("ViewFit")
+	Draft.makeText(["textanzeige"],point=FreeCAD.Vector(4.43928909302,60.9376678467,0.0))
+	FreeCADGui.getDocument("Unnamed").getObject("Text").FontSize = 10
+def finish1():
+	try:
+		App.ActiveDocument=App.getDocument("Unnamed")
+		Gui.ActiveDocument=Gui.getDocument("Unnamed")
+		App.closeDocument("Unnamed")
+		App.setActiveDocument("")
+		App.ActiveDocument=None
+		Gui.ActiveDocument=None
+	except:
+		pass
+
+def test1():
+
+
+	m=Manager()
+	m.setShowTime(text)
+	fn='/home/microelly2/pic2/AA_B'
+ 	m.setOutput(fn)
+
+	r1=Mover(rectangle,sk2,5,45)
+	r1.initPlacement(rp)
+	m.register(r1)
+
+	r2=Mover(rectangle,sk,25,80)
+	m.register(r2)
+
+	r3=Rotator(triangle)
+	r3.initPlacement(tp)
+	m.register(r3)
+	
+	m.run(100)
+
+
+# main
+init1()
+
+rectangle=FreeCAD.ActiveDocument.Rectangle
+triangle=FreeCAD.ActiveDocument.DWire
+helper=FreeCAD.ActiveDocument.DWire001
+text=FreeCAD.ActiveDocument.Text
+
+test1()
+finish1()
