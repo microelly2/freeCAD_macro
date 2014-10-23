@@ -38,6 +38,33 @@ class Actor(object):
 	def setIntervall(self,s,e):
 		self.start=s
 		self.end=e
+
+class  Photographer(Actor):
+	def __init__(self,filename='/tmp/anim_out_',size_x=640,size_y=480):
+		self.fn=filename
+		self.size_x=size_x
+		self.size_y=size_y
+
+	def step(self,now):
+		if now<self.start or now>self.end:
+			pass
+		else:
+			FreeCADGui.Selection.clearSelection()
+			FreeCADGui.updateGui() 
+			kf= "%04.f"%now
+			fn=self.fn+kf+'.png'
+			Gui.activeDocument().activeView().saveImage(fn,self.size_x,self.size_y,'Current')
+	def  toInitialPlacement(self):
+		pass
+
+class  Tranquillizer(Actor):
+	def __init__(self,time=0.02):
+		self.time=time
+	def step(self,now):
+		time.sleep(self.time)
+	def  toInitialPlacement(self):
+		pass
+	
 	
 	
 
@@ -144,20 +171,10 @@ class Manager(object):
 			#Draft.move(helper,sk,copy=False)
 			FreeCADGui.Selection.clearSelection()
 			FreeCADGui.updateGui() 
-			self.genOutput(nw)
+#			self.genOutput(nw)
 			self.showTime(nw)
-			time.sleep(0.02)
 
-	def setOutput(self,path,size_x=640,size_y=480):
-		self.fn=path
-		self.size_x=size_x
-		self.size_y=size_y
 
-	def genOutput(self,nw1):
-		if self.fn<>'':
-			kf= "%04.f"%nw1
-			fn=self.fn+kf+'.png'
-			Gui.activeDocument().activeView().saveImage(fn,self.size_x,self.size_y,'Current')
 
 	def setShowTime(self,texter):
 		self.text=texter
@@ -233,8 +250,8 @@ def test1():
 	m.setShowTime(text)
 
 	# place to write the film output
-	fn='/home/microelly2/pic2/AA_B'
- 	m.setOutput(fn)
+#	fn='/home/microelly2/pic2/AA_B'
+# 	m.setOutput(fn)
 
 	# actor 1 an rectangle, that should move - move the table
 	r1=Mover("Rectangle",sk2,5,45)
@@ -249,6 +266,9 @@ def test1():
 	r3=Rotator("DWire")
 	r3.initPlacement(tp)
 	m.register(r3)
+
+	tr=Tranquillizer(0.1)
+	m.register(tr)
 	
 	# run the animation for 100 frames
 ##	m.run(100)
@@ -268,6 +288,10 @@ def test2():
 	r1=Mover("Rectangle","Line",0,10)
  	r1.initPlacement(rp)
 	m.register(r1)
+
+	tr=Tranquillizer(0.1)
+	m.register(tr)
+
 	m.run(10)
 
 	App.getDocument("Unnamed").removeObject("Text")
@@ -277,10 +301,13 @@ def test3():
 	m=Manager()
 	r1=Mover("Rectangle","-Line",0,30)
 	m.register(r1)
+	tr=Tranquillizer(0.1)
+	m.register(tr)
 	m.run(30)
 
 def test4():
-	# rot clockwise and counterclockwise
+	# load m01_tests234 FCs
+	# rotate clockwise and counterclockwise
 	m=Manager()
 	r3=Rotator("DWire")
 	r3.setIntervall(10,40)
@@ -292,13 +319,22 @@ def test4():
 	r4.setIntervall(50,80)
 	r4.setRot("DWire002")
 	m.register(r4)
-	m.run(90)
+
+	# make fotos in time 10 -- 40 to output /tmp/test4_*
+	f=Photographer("/tmp/test4_")
+	f.setIntervall(10,40)
+	m.register(f)
+
+	# pause for 0.1 sec after each step
+	tr=Tranquillizer(0.1)
+	m.register(tr)
+	m.run(100)
 
 
 
 # main
 
-if 0:
+if 1:
 	init1()
 	test1()
 	finish1()
@@ -307,6 +343,5 @@ if 0:
 	test2()
 if 0:
 	test3()
-
-if 1:
+if 0:
 	test4()
