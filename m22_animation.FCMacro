@@ -35,6 +35,10 @@ class Actor(object):
 
 	def toInitialPlacement(self):
 		self.obj.Placement=self.initPlace
+	def setIntervall(self,s,e):
+		self.start=s
+		self.end=e
+	
 	
 
 class  Mover(Actor):
@@ -65,6 +69,8 @@ class  Mover(Actor):
 			relativ=1.00/(self.end-self.start)
 			v=FreeCAD.Vector(self.motionVector).multiply(relativ)
 			Draft.move(self.obj,v,copy=False)
+	def reverse(self):
+		self.motionVector.multiply(-1)
 
 class  Rotator(Actor):
 
@@ -83,6 +89,41 @@ class  Rotator(Actor):
 			say(angle2)
 			say(self.axisVector)
 			Draft.rotate([self.obj],angle2,self.positionVector,axis=self.axisVector,copy=False)
+	def  setRot(self,dwireName):
+		import math
+		obj=self.getObject(dwireName)
+#		t=App.ActiveDocument.DWire002
+		t=obj
+		a=t.Shape.Vertexes[0]
+		b=t.Shape.Vertexes[1]
+		c=t.Shape.Vertexes[2]
+		v1=FreeCAD.Vector(a.X,a.Y,a.Z).sub(FreeCAD.Vector(b.X,b.Y,b.Z))
+		
+		v2=FreeCAD.Vector(c.X,c.Y,c.Z).sub(FreeCAD.Vector(b.X,b.Y,b.Z))
+		
+		print v1
+		axis=v1.cross(v2)
+		print axis
+		
+		
+		print v1
+		
+		dot=v1.dot(v2)
+		print dot
+		
+		cosAngle=dot/(v1.Length *v2.Length)
+		
+		print cosAngle
+		angle=math.acos(cosAngle)/math.pi *180
+		
+		print angle
+		self.axisVector=axis
+		self.angle=angle
+	def reverse(self):
+		self.angle =- self.angle
+
+
+
 	
 class Manager(object):
 	def __init__(self):
@@ -238,6 +279,23 @@ def test3():
 	m.register(r1)
 	m.run(30)
 
+def test4():
+	# rot clockwise and counterclockwise
+	m=Manager()
+	r3=Rotator("DWire")
+	r3.setIntervall(10,40)
+	r3.initPlacement(tp)
+	r3.setRot("DWire002")
+	r3.reverse()
+	m.register(r3)
+	r4=Rotator("DWire")
+	r4.setIntervall(50,80)
+	r4.setRot("DWire002")
+	m.register(r4)
+	m.run(90)
+
+
+
 # main
 
 if 0:
@@ -245,8 +303,10 @@ if 0:
 	test1()
 	finish1()
 
-if 1:
+if 0:
 	test2()
-if 1:
+if 0:
 	test3()
 
+if 1:
+	test4()
