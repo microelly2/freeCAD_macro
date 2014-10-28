@@ -1,0 +1,37 @@
+# -*- coding: utf-8 -*-
+# (c) microelly2@freecadbuch.de 2014
+#
+# create a projection of the selected face object 
+# shows the true size of the face
+
+def normalProjektion():
+	MouseSel = Gui.Selection.getSelectionEx()
+	f=MouseSel[0].Object
+
+	name=f.Label
+	
+	#	f=FreeCAD.ActiveDocument.Box
+	
+	v0=f.Shape.Vertexes[0].Point
+	v1=f.Shape.Vertexes[1].Point
+	v2=f.Shape.Vertexes[2].Point
+	
+	
+	k1=FreeCAD.Vector(v1).sub(FreeCAD.Vector(v0))
+	k2=FreeCAD.Vector(v2).sub(FreeCAD.Vector(v0))
+	n=k1.cross(k2).normalize()
+	
+	FreeCAD.ActiveDocument.addObject('Drawing::FeatureProjection',name + '_proj')
+	FreeCAD.ActiveDocument.ActiveObject.Direction=FreeCAD.Vector(n)
+	
+	FreeCAD.ActiveDocument.ActiveObject.Source=f
+	App.ActiveDocument.recompute()
+	
+
+
+
+
+
+normalProjektion()
+
+
