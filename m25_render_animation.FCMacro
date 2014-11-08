@@ -1,0 +1,2 @@
+import os
+os.system("rm -f /tmp/animation.mp4;avconv -f image2 -i /tmp/animation/t%4d.png -vcodec libx264 /tmp/animation.mp4 2>/tmp/log.2 1>/tmp/log.1;totem /tmp/animation.mp4 &")

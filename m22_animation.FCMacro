@@ -1,197 +1,30 @@
 
+import sys
+sys.path.append('/home/microelly2/fc_dev/')
+import mymodule
+import Animation
+from Animation import *
+
+import FreeCAD
+App=FreeCAD
+import FreeCADGui
 
 import FreeCADGui
+Gui=FreeCADGui
+
 import Draft
 import time
 import datetime
+
+reload(Animation)
+
 
 ll=20
 
 
 
-def say(wort):
-   App.Console.PrintMessage(str(wort) + "\n")
-
-# version 0.2
-
-class Actor(object):
-
-	def __init__(self,obj,start=10,end=20):
-		self.obj=self.getObject(obj)
-		self.start=start
-		self.end=end
-		self.initPlace=	self.obj.Placement
 
 
-	def initPlacement(self,tp):
-		self.initPlace=tp
-		self.obj.Placement=tp
-	def getObject(self,name):
-		if  isinstance(name,str):
-			obj=FreeCAD.ActiveDocument.getObject(name)
-		else:
-			obj=name
-		return obj
-
-	def toInitialPlacement(self):
-		self.obj.Placement=self.initPlace
-	def setIntervall(self,s,e):
-		self.start=s
-		self.end=e
-
-class  Photographer(Actor):
-	def __init__(self,filename='/tmp/anim_out_',size_x=640,size_y=480):
-		self.fn=filename
-		self.size_x=size_x
-		self.size_y=size_y
-
-	def step(self,now):
-		if now<self.start or now>self.end:
-			pass
-		else:
-			FreeCADGui.Selection.clearSelection()
-			FreeCADGui.updateGui() 
-			kf= "%04.f"%now
-			fn=self.fn+kf+'.png'
-			Gui.activeDocument().activeView().saveImage(fn,self.size_x,self.size_y,'Current')
-	def  toInitialPlacement(self):
-		pass
-
-class  Tranquillizer(Actor):
-	def __init__(self,time=0.02):
-		self.time=time
-	def step(self,now):
-		time.sleep(self.time)
-	def  toInitialPlacement(self):
-		pass
-	
-	
-	
-
-class  Mover(Actor):
-
-	def __init__(self,obj,motion=FreeCAD.Vector(100,0,0) ,start=10,end=20):
- 		super(type(self), self).__init__(obj,start,end)
-		v=motion
-		if   isinstance(motion,str):
-			k=motion[0:1]
-			say(k)
-			if k=='-':
-				motion=motion[1:]
-				tobj=FreeCAD.ActiveDocument.getObject(motion)
-				end=FreeCAD.Vector(tobj.Start)
-				start=FreeCAD.Vector(tobj.End)
-			else:
-				tobj=FreeCAD.ActiveDocument.getObject(motion)
-				start=FreeCAD.Vector(tobj.Start)
-				end=FreeCAD.Vector(tobj.End)
-			v=end.sub(start)
-		self.motionVector=v
-
-
-	def step(self,now):
-		if now<self.start or now>self.end:
-			pass
-		else:
-			relativ=1.00/(self.end-self.start)
-			v=FreeCAD.Vector(self.motionVector).multiply(relativ)
-			Draft.move(self.obj,v,copy=False)
-	def reverse(self):
-		self.motionVector.multiply(-1)
-
-class  Rotator(Actor):
-
-	def __init__(self,obj,position=FreeCAD.Vector(0,0,0),axis=FreeCAD.Vector(0,0,1),angle=290,start=10,end=90):
- 		super(type(self), self).__init__(obj,start,end)
-		self.positionVector=position
-		self.axisVector=axis
-		self.angle=angle
-
-	def step(self,now):
-		if now<self.start or now>self.end:
-			pass
-		else:
-			relativ=1.00/(self.end-self.start)
-			angle2=self.angle*relativ
-			say(angle2)
-			say(self.axisVector)
-			Draft.rotate([self.obj],angle2,self.positionVector,axis=self.axisVector,copy=False)
-	def  setRot(self,dwireName):
-		import math
-		obj=self.getObject(dwireName)
-#		t=App.ActiveDocument.DWire002
-		t=obj
-		a=t.Shape.Vertexes[0]
-		b=t.Shape.Vertexes[1]
-		c=t.Shape.Vertexes[2]
-		v1=FreeCAD.Vector(a.X,a.Y,a.Z).sub(FreeCAD.Vector(b.X,b.Y,b.Z))
-		
-		v2=FreeCAD.Vector(c.X,c.Y,c.Z).sub(FreeCAD.Vector(b.X,b.Y,b.Z))
-		
-		print v1
-		axis=v1.cross(v2)
-		print axis
-		
-		
-		print v1
-		
-		dot=v1.dot(v2)
-		print dot
-		
-		cosAngle=dot/(v1.Length *v2.Length)
-		
-		print cosAngle
-		angle=math.acos(cosAngle)/math.pi *180
-		
-		print angle
-		self.axisVector=axis
-		self.angle=angle
-	def reverse(self):
-		self.angle =- self.angle
-
-
-
-	
-class Manager(object):
-	def __init__(self):
-		self.targets=[]
-		self.fn=''
-		self.text=0
-		pass
-
-	def register(self,obj):
-		self.targets.append(obj)
-
-	
-	def run(self,intervall):
-		for nw in range(intervall):	
-			say(nw)
-			for obj in self.targets:
-				obj.step(nw)
-			#Draft.move(helper,sk,copy=False)
-			FreeCADGui.Selection.clearSelection()
-			FreeCADGui.updateGui() 
-#			self.genOutput(nw)
-			self.showTime(nw)
-
-
-
-	def setShowTime(self,texter):
-		self.text=texter
-
-
-	def showTime(self,nw1):
-		if self.text:
-			kf= "%04.f"%nw1
-			self.text.LabelText = [unicode(str(kf), 'utf-8'),]
-
-	def finalize(self,wait=5):
-			for obj in self.targets:
-				obj.toInitialPlacement()
-				FreeCADGui.updateGui() 
-			time.sleep(wait)
-	
- 
 
 
 # vectors for the moves
@@ -238,6 +71,10 @@ def finish1():
 		Gui.ActiveDocument=None
 	except:
 		pass
+
+
+
+
 
 def test1():
 
@@ -331,10 +168,117 @@ def test4():
 	m.run(100)
 
 
+def test5():
+	m=Manager()
+	
+	stella=Rotator('stella')
+	stella.setRot('DWire')
+	stella.setIntervall(50,150)
+	m.register(stella)
+
+	freek=Mover("freek_v2","Line003",10,100)
+	m.register(freek)
+
+	s2=Rotator('freek_v2')
+	s2.setRot('DWire003')
+	s2.setIntervall(100,140)
+	s2.reverse2()
+	s2.reverse()
+	m.register(s2)
+
+	freek=Mover("freek_v2","Line001",140,240)
+	m.register(freek)
+
+	s2=Rotator('freek_v2')
+	s2.setRot('DWire002')
+	s2.setIntervall(250,270)
+	s2.reverse2()
+	m.register(s2)
+
+	freek=Mover("freek_v2","Line002",280,360)
+	m.register(freek)
+
+	f=Photographer("/tmp/test5_")
+	f.setIntervall(0,450)
+	m.register(f)
+
+#	tr=Tranquillizer(0.1)
+#	m.register(tr)
+	m.run(440)
+	m.finalize(0)
+
+def test6():
+	m=Manager()
+	
+
+	f=Mover("Schraube","Anlieferer",10,100)
+	m.register(f)
+
+	f=Mover("Schraube","Senker",130,200)
+	m.register(f)
+
+	s=Rotator('Schraube')
+	s.setRot('Dreher')
+	s.setIntervall(150,200)
+	m.register(s)
+
+	f=Photographer("/tmp/AA_")
+	f.setIntervall(0,450)
+	m.register(f)
+
+	tr=Tranquillizer(0.01)
+	m.register(tr)
+	m.run(300)
+
+	m.finalize(0)
+
+
+
 
 # main
+def test7():
+	m=Manager()
+	f=Mover("Schraube","Anlieferer",10,100)
+	m.register(f)
+	p=Pinner('Kiste','Schraube')
+	m.register(p)
 
-if 1:
+	tr=Tranquillizer(0.101)
+	m.register(tr)
+
+	m.run(100)
+	m.finalize(0)
+
+
+'''
+Schraube verschiebt sich entlang der blauen Linie
+Kiste foilgt dem Punnkt auf dem Kreis
+Kreisradius von 10 auf 30
+'''
+def test7():
+	m=Manager()
+	f=Mover("Schraube","Anlieferer",10,100)
+	m.register(f)
+
+	
+	st=Adjuster('Sketch','rradd','',0,10)
+	st.setValues(10,30)
+	m.register(st)
+
+
+	p=Plugger('Kiste','Sketch')
+	p.setDetail('Vertex.Point',0)
+
+	m.register(p)
+
+	tr=Tranquillizer(0.01)
+	m.register(tr)
+
+	m.run(100)
+	m.finalize(0)
+
+
+if 0:
 	init1()
 	test1()
 	finish1()
@@ -342,6 +286,17 @@ if 1:
 if 0:
 	test2()
 if 0:
+
 	test3()
 if 0:
 	test4()
+
+
+if 0:
+	test5()
+if 0:
+	test6()
+
+test7()
+
+
