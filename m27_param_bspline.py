@@ -2,18 +2,21 @@
 #-------------------------------------------------
 #-- bspline on top of a sketch
 #--
-#-- microelly 2016 v 0.3
+#-- microelly 2016 v 0.4
 #--
 #-- GNU Lesser General Public License (LGPL)
 #-------------------------------------------------
 # bspline von poles erzeugen
 
+import Draft
+
+
 def printinfo(sp):
-		print sp.Degree
-		print sp.Continuity
-		print len(sp.getPoles())
-		print sp.KnotSequence
-		print sp.getWeights()
+		print "\n" *2
+		print "degree ",sp.Degree, " continuity ", sp.Continuity
+		print "count poles ", len(sp.getPoles())
+		print "knots ", sp.KnotSequence
+		print "weights ",sp.getWeights()
 
 
 class PartFeature:
@@ -28,14 +31,54 @@ class MyBSpline(PartFeature):
 		obj.addProperty("App::PropertyEnumeration","mode","Wire","").mode=["poles","interpolate","approximate"]
 		obj.addProperty("App::PropertyEnumeration","paramtype","Wire","")
 		obj.paramtype=['Default','Centripetal','Uniform','ChordLength']
+		obj.addProperty("App::PropertyVector","InitialTangent","Tangents","")
+		obj.addProperty("App::PropertyVector","FinalTangent","Tangents","")
+		obj.addProperty("App::PropertyStringList","Tangents","Tangents","")
+		obj.addProperty("App::PropertyStringList","TangentFlags","Tangents","")
 
-	def recompute(self,fp,pts):
+	def recompute(self,fp):
+
+		w=fp.wire
+		eds=Part.__sortEdges__(w.Shape.Edges)
+		pts=[]
+		for e in eds:
+			ees=e.discretize(2)
+			pts += ees[0:-1]
+
+		pts.append(ees[-1])
+
 		sp=Part.BSplineCurve()
-		sp.increaseDegree(3)
+		#sp.increaseDegree(3)
 		if fp.mode=="poles":
 			sp.buildFromPoles(pts)
 		elif fp.mode=="interpolate":
-			sp.interpolate(pts)
+			if fp.InitialTangent.Length<>0 and fp.FinalTangent.Length<>0: 
+				sp.interpolate(pts,InitialTangent=fp.InitialTangent,FinalTangent=fp.FinalTangent)
+			elif 1:
+				# tangenten an einzelne Punkte
+				Tangents=[]
+				Tangentflags=[]
+				tt=fp.Tangents
+				print tt
+				for i,p in enumerate(pts):
+					try:
+				#		print  str(tt[i])
+						j=','.join(str(tt[i]).split())
+				#		print j
+				#		print str(fp.TangentFlags[i])
+						v=eval("FreeCAD.Vector(" +  j +")")
+						v.normalize()
+						Tangents.append(v)
+						Tangentflags.append(str(fp.TangentFlags[i]) == '1')
+					except:
+						print "Fehler Tangenten Vektor ", i+1
+						Tangents.append(FreeCAD.Vector(1,0,0))
+						Tangentflags.append(0)
+
+				sp.interpolate(pts,Tangents=Tangents,TangentFlags=Tangentflags)
+			else:
+				sp.interpolate(pts)
+
 		elif fp.mode=="approximate":
 			paramtype=fp.paramtype
 			if paramtype<>'Default':
@@ -48,31 +91,12 @@ class MyBSpline(PartFeature):
 
 	def onChanged(self, fp, prop):
 		if prop=="wire" and fp.wire <> None:
-			w=fp.wire
-			eds=Part.__sortEdges__(w.Shape.Edges)
-			pts=[]
-			for e in eds:
-				ees=e.discretize(2)
-				pts += ees[0:-1]
-
-			pts.append(ees[-1])
-
-			sp=self.recompute(fp,pts)
+			sp=self.recompute(fp)
 			fp.Shape=sp.toShape()
 
 	def execute(self, fp):
 		if  fp.wire <> None:
-			w=fp.wire
-			eds=Part.__sortEdges__(w.Shape.Edges)
-			pts=[]
-			for e in eds:
-				ees=e.discretize(2)
-				pts += ees[0:-1]
-
-			pts.append(ees[-1])
-
-			sp=self.recompute(fp,pts)
-
+			sp=self.recompute(fp)
 			fp.Shape=sp.toShape()
 
 
@@ -88,54 +112,21 @@ def makeMySpline():
 	MyBSpline(a)
 	ViewProviderMyBSpline(a.ViewObject)
 	a.ViewObject.LineColor=(1.00,.00,.00)
-	a.ViewObject.LineWidth=1
+	a.ViewObject.LineWidth=3
 	return a
 
 
-
-# testcase
-
-App.newDocument("Unbenannt")
-App.setActiveDocument("Unbenannt")
-App.ActiveDocument=App.getDocument("Unbenannt")
-Gui.ActiveDocument=Gui.getDocument("Unbenannt")
+if __name__=='__main__':
 
 
-App.activeDocument().addObject('Sketcher::SketchObject','Sketch')
-App.activeDocument().Sketch.Support = (App.activeDocument().XY_Plane, [''])
-App.activeDocument().Sketch.MapMode = 'FlatFace'
-App.ActiveDocument.recompute()
-App.activeDocument().Body.addFeature(App.activeDocument().Sketch)
+	points=[FreeCAD.Vector(-30,0.0,0.0),FreeCAD.Vector(-20,30,0.0),FreeCAD.Vector(20,40,0.0),
+		FreeCAD.Vector(40,-20,0.0),FreeCAD.Vector(150,-20,0.0),FreeCAD.Vector(190,80,0.0)]
 
-App.ActiveDocument.Sketch.addGeometry(Part.Line(App.Vector(-182.677419,-87.745679,0),App.Vector(-114.598880,242.057054,0)),False)
-App.ActiveDocument.recompute()
-App.ActiveDocument.Sketch.addGeometry(Part.Line(App.Vector(-114.598880,242.057054,0),App.Vector(-73.751759,156.580633,0)),False)
-App.ActiveDocument.Sketch.addConstraint(Sketcher.Constraint('Coincident',0,2,1,1)) 
-App.ActiveDocument.recompute()
-App.ActiveDocument.recompute()
-App.ActiveDocument.Sketch.addGeometry(Part.Line(App.Vector(-73.751759,156.580633,0),App.Vector(-23.827494,266.262755,0)),False)
-App.ActiveDocument.Sketch.addConstraint(Sketcher.Constraint('Coincident',1,2,2,1)) 
-App.ActiveDocument.recompute()
-App.ActiveDocument.recompute()
-App.ActiveDocument.Sketch.addGeometry(Part.Line(App.Vector(-23.827494,266.262755,0),App.Vector(138.048147,-98.335679,0)),False)
-App.ActiveDocument.Sketch.addConstraint(Sketcher.Constraint('Coincident',2,2,3,1)) 
-App.ActiveDocument.recompute()
-App.ActiveDocument.recompute()
-App.ActiveDocument.Sketch.addGeometry(Part.Line(App.Vector(138.048147,-98.335679,0),App.Vector(149.394594,-25.718566,0)),False)
-App.ActiveDocument.Sketch.addConstraint(Sketcher.Constraint('Coincident',3,2,4,1)) 
-App.ActiveDocument.recompute()
-App.ActiveDocument.recompute()
-App.ActiveDocument.Sketch.addGeometry(Part.Line(App.Vector(149.394594,-25.718566,0),App.Vector(169.061703,-47.654972,0)),False)
-App.ActiveDocument.Sketch.addConstraint(Sketcher.Constraint('Coincident',4,2,5,1)) 
-App.ActiveDocument.recompute()
-App.ActiveDocument.recompute()
-App.ActiveDocument.Sketch.addGeometry(Part.Line(App.Vector(169.061703,-47.654972,0),App.Vector(212.934544,88.502125,0)),False)
-App.ActiveDocument.Sketch.addConstraint(Sketcher.Constraint('Coincident',5,2,6,1)) 
-App.ActiveDocument.recompute()
-App.ActiveDocument.recompute()
-Gui.getDocument('Unbenannt').resetEdit()
-ActiveSketch = App.ActiveDocument.getObject('Sketch')
 
-a=makeMySpline()
-a.wire=App.ActiveDocument.Sketch
-a.mode="approximate"
+	a=makeMySpline()
+	a.wire=Draft.makeWire(points,closed=False,face=True,support=None)
+
+	a.Tangents='1 0 0,1 0 0,1 1 0,1 0 0,1 0 0,-1 0 0'.split(',')
+	a.TangentFlags=['0','1','1','0','0','1']
+
+	App.activeDocument().recompute()
