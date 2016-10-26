@@ -2,14 +2,13 @@
 #-------------------------------------------------
 #-- bspline on top of a sketch
 #--
-#-- microelly 2016 v 0.4
+#-- microelly 2016 v 0.5
 #--
 #-- GNU Lesser General Public License (LGPL)
 #-------------------------------------------------
 # bspline von poles erzeugen
 
-import Draft
-
+import FreeCAD, Part, FreeCADGui
 
 def printinfo(sp):
 		print "\n" *2
@@ -74,8 +73,10 @@ class MyBSpline(PartFeature):
 						print "Fehler Tangenten Vektor ", i+1
 						Tangents.append(FreeCAD.Vector(1,0,0))
 						Tangentflags.append(0)
-
-				sp.interpolate(pts,Tangents=Tangents,TangentFlags=Tangentflags)
+				try:
+					sp.interpolate(pts,Tangents=Tangents,TangentFlags=Tangentflags)
+				except:
+					sp.interpolate(pts)
 			else:
 				sp.interpolate(pts)
 
@@ -116,9 +117,16 @@ def makeMySpline():
 	return a
 
 
-if __name__=='__main__':
 
+def runtest():
 
+	import Draft
+
+	if FreeCAD.ActiveDocument == None:
+		FreeCAD.newDocument("Unbenannt")
+		FreeCAD.setActiveDocument("Unbenannt")
+		FreeCAD.ActiveDocument=FreeCAD.getDocument("Unbenannt")
+	
 	points=[FreeCAD.Vector(-30,0.0,0.0),FreeCAD.Vector(-20,30,0.0),FreeCAD.Vector(20,40,0.0),
 		FreeCAD.Vector(40,-20,0.0),FreeCAD.Vector(150,-20,0.0),FreeCAD.Vector(190,80,0.0)]
 
@@ -129,4 +137,12 @@ if __name__=='__main__':
 	a.Tangents='1 0 0,1 0 0,1 1 0,1 0 0,1 0 0,-1 0 0'.split(',')
 	a.TangentFlags=['0','1','1','0','0','1']
 
-	App.activeDocument().recompute()
+	FreeCAD.activeDocument().recompute()
+	FreeCADGui.SendMsgToActiveView("ViewFit")
+
+	
+print "bspline 2 loaded"
+
+if __name__=='__main__':
+
+	runtest()
