@@ -27,6 +27,7 @@ def loadobj():
 	fn='/home/thomas/Dokumente/freecad_buch/b231_kscan/body-v2-obj/body-v2.obj'
 	fn='/home/thomas/Dokumente/freecad_buch/b231_kscan/model.obj'
 	fn='/home/thomas/Dokumente/freecad_buch/b232_blender_banana/banana.obj'
+	fn='/home/thomas/Downloads/CUP_GOM_06.02.2017.stl'
 
 	with open(fn) as f:
 		content = f.readlines()
@@ -34,6 +35,7 @@ def loadobj():
 	pts=[]
 	for i,l in enumerate(content):
 		if l.startswith('v '):
+			print l
 			[a,x,y,z]=l.split(' ')
 			
 			p=FreeCAD.Vector(float(x),float(z),-float(y))
@@ -45,6 +47,22 @@ def loadobj():
 	t=Points.Points(pts)
 	Points.show(t)
 
+import numpy
+from stl import mesh
+
+def loadstl(): # stl !!
+
+	fn='/home/thomas/Downloads/CUP_GOM_06.02.2017.stl'
+	m = mesh.Mesh.from_file(fn)
+
+	pts=[]
+	for i,p in enumerate(m.points):
+			[x,y,z]=p[0:3]
+			p=FreeCAD.Vector(float(x),float(z),-float(y))
+			pts.append(p)
+
+	t=Points.Points(pts)
+	Points.show(t)
 
 
 #-----------------------
@@ -212,7 +230,6 @@ def toppoints(mode=5):
 
 def reducepoints(k=40):
 
-
 	sels=Gui.Selection.getSelection()
 	if len(sels)<>1: print("Du musst Pointset auswaehlen" )
 	pts=np.array(sels[0].Points.Points)
@@ -246,6 +263,48 @@ def reducepoints(k=40):
 	Points.show(pcl)
 	App.ActiveDocument.ActiveObject.ViewObject.ShapeColor=(random.random(),random.random(),random.random())
 	App.ActiveDocument.ActiveObject.Label="Reduce " +str(k) + " " +sels[0].Label +" "
+
+
+def reduceslides(k=40):
+	''' k ist anzahl der schichten '''
+
+	sels=Gui.Selection.getSelection()
+	if len(sels)<>1: print("Du musst Pointset auswaehlen" )
+	pts=np.array(sels[0].Points.Points)
+	
+	size=sels[0].Points.BoundBox.DiagonalLength
+	k2=size/k
+
+	print ("len start",len(pts))
+	pts=np.array(pts)
+
+	ptsm=pts
+
+	if k<>0:
+#		ptsm[:]  += [100,300,500]
+		ptsm /=k2 
+		pts2=ptsm.round()
+		pts2 *=k2
+	else:
+		pts2=ptsm
+
+	data=pts2
+	ncols = data.shape[1]
+	dtype = data.dtype.descr * ncols
+	struct = data.view(dtype)
+
+	uniq = np.unique(struct)
+	uniq = uniq.view(data.dtype).reshape(-1, ncols)
+
+	pts3= uniq
+	print len(uniq)
+
+	pts3v=[FreeCAD.Vector(p) for p in pts3]
+	pcl=Points.Points(pts3v)
+	Points.show(pcl)
+	App.ActiveDocument.ActiveObject.ViewObject.ShapeColor=(random.random(),random.random(),random.random())
+	App.ActiveDocument.ActiveObject.Label="Reduce " +str(k) + " " +sels[0].Label +" "
+
 
 
 
