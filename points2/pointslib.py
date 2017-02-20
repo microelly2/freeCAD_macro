@@ -27,8 +27,10 @@ def loadobj():
 	fn='/home/thomas/Dokumente/freecad_buch/b231_kscan/body-v2-obj/body-v2.obj'
 	fn='/home/thomas/Dokumente/freecad_buch/b231_kscan/model.obj'
 	fn='/home/thomas/Dokumente/freecad_buch/b232_blender_banana/banana.obj'
-	fn='/home/thomas/Downloads/CUP_GOM_06.02.2017.stl'
+#	fn='/home/thomas/Downloads/CUP_GOM_06.02.2017.stl'
+#	fn='/home/thomas/Downloads/gh.stl'
 
+	print "read ",fn
 	with open(fn) as f:
 		content = f.readlines()
 
@@ -53,6 +55,9 @@ from stl import mesh
 def loadstl(): # stl !!
 
 	fn='/home/thomas/Downloads/CUP_GOM_06.02.2017.stl'
+	fn='/home/thomas/Downloads/gh.stl'
+
+	print "read ",fn
 	m = mesh.Mesh.from_file(fn)
 
 	pts=[]
